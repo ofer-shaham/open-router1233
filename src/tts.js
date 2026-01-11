@@ -51,14 +51,14 @@ export const stop = () => {
 };
 
 export const playScreenplay = async (screenplay, options = {}) => {
-  const { includeNarrator = false, characterMode = true, onLineStart } = options;
+  const { includeNarrator = false, characterMode = true, onLineStart, languageSpeeds = {}, onWordStart } = options;
   const scenes = screenplay.scenes || [];
 
   for (let sceneIdx = 0; sceneIdx < scenes.length; sceneIdx++) {
     const scene = scenes[sceneIdx];
 
     if (includeNarrator && scene.scene) {
-      await speak(`Scene: ${scene.scene}`, 'English', 1);
+      await speakWithHighlight(`Scene: ${scene.scene}`, 'English', languageSpeeds['English'] || 1, onWordStart);
     }
 
     const dialogue = scene.dialogue || [];
@@ -66,17 +66,57 @@ export const playScreenplay = async (screenplay, options = {}) => {
       const line = dialogue[lineIdx];
 
       if (includeNarrator && line.character) {
-        await speak(`${line.character}`, 'English', 1);
+        await speakWithHighlight(`${line.character}`, 'English', languageSpeeds['English'] || 1, onWordStart);
       }
 
       const lang = characterMode && line.language ? line.language : 'English';
       const text = line.text || line.translation || '';
+      const speed = languageSpeeds[lang] || 1;
 
-      await speak(text, lang, 1, () => {
+      await speakWithHighlight(text, lang, speed, onWordStart, () => {
         if (onLineStart) onLineStart(sceneIdx, lineIdx);
       });
     }
   }
 
   if (onLineStart) onLineStart(-1, -1);
+};
+
+export const speakWithHighlight = (text, lang = 'English', rate = 1, onWordStart, onStart) => {
+  return new Promise((resolve) => {
+    const langCode = convertLangToISO(lang);
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = langCode;
+
+    const voice = getVoiceForLanguage(langCode);
+    if (voice) {
+      utterance.voice = voice;
+    }
+
+    utterance.rate = rate;
+    if (onStart) utterance.onstart = onStart;
+    utterance.onend = resolve;
+    utterance.onerror = resolve;
+
+    const words = text.split(/\s+/).filter(w => w.length > 0);
+    let currentWordIndex = 0;
+    const wordDuration = (text.length / rate) * 10;
+    const avgWordDuration = wordDuration / Math.max(words.length, 1);
+
+    const interval = setInterval(() => {
+      if (currentWordIndex < words.length && onWordStart) {
+        onWordStart(words[currentWordIndex]);
+        currentWordIndex++;
+      }
+    }, avgWordDuration);
+
+    const originalOnEnd = utterance.onend;
+    utterance.onend = () => {
+      clearInterval(interval);
+      if (onWordStart) onWordStart(null);
+      originalOnEnd?.();
+    };
+
+    synth.speak(utterance);
+  });
 };

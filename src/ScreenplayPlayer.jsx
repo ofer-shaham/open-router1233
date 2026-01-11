@@ -16,6 +16,8 @@ export default function ScreenplayPlayer() {
   const [currentLine, setCurrentLine] = useState(-1);
   const [showFormat, setShowFormat] = useState(false);
   const [expandedSections, setExpandedSections] = useState({});
+  const [languageSpeeds, setLanguageSpeeds] = useState({});
+  const [currentWord, setCurrentWord] = useState('');
   const { screenplay, loading, error, generate, format } = useScreenplay();
 
   const handleGenerate = () => {
@@ -37,9 +39,13 @@ export default function ScreenplayPlayer() {
     await playScreenplay(screenplay, {
       includeNarrator: narrator,
       characterMode: characterLang,
+      languageSpeeds: languageSpeeds,
       onLineStart: (sceneIdx, lineIdx) => {
         setCurrentScene(sceneIdx);
         setCurrentLine(lineIdx);
+      },
+      onWordStart: (word) => {
+        setCurrentWord(word || '');
       }
     });
     setPlaying(false);
@@ -58,6 +64,13 @@ export default function ScreenplayPlayer() {
     setLanguagesUsed(prev =>
       prev.includes(lang) ? prev.filter(l => l !== lang) : [...prev, lang]
     );
+  };
+
+  const updateLanguageSpeed = (lang, speed) => {
+    setLanguageSpeeds(prev => ({
+      ...prev,
+      [lang]: speed
+    }));
   };
 
   const expandAll = () => {
@@ -190,6 +203,28 @@ export default function ScreenplayPlayer() {
         </div>
 
         <div className="form-group">
+          <label>Speech Speed by Language</label>
+          <div className="speed-grid">
+            {LANGUAGES.map(lang => (
+              <div key={lang} className="speed-control">
+                <label>{lang}</label>
+                <input
+                  type="range"
+                  min="0.5"
+                  max="2"
+                  step="0.1"
+                  value={languageSpeeds[lang] || 1}
+                  onChange={(e) => updateLanguageSpeed(lang, parseFloat(e.target.value))}
+                  disabled={loading || playing}
+                  title={`Speed: ${(languageSpeeds[lang] || 1).toFixed(1)}x`}
+                />
+                <span className="speed-value">{(languageSpeeds[lang] || 1).toFixed(1)}x</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="form-group">
           <label>Default Screenplay Language (for all text except the dialogs)</label>
           <select
             value={defaultScreenplayLanguage}
@@ -270,19 +305,31 @@ export default function ScreenplayPlayer() {
                 <h3>{scene.scene_heading || `Scene ${sceneIdx + 1}`}</h3>
                 <p className="scene-description">{scene.scene}</p>
                 {scene.transition && <p className="transition">{scene.transition}</p>}
-                {scene.dialogue?.map((line, lineIdx) => (
-                  <div
-                    key={lineIdx}
-                    className={`dialogue-line ${sceneIdx === currentScene && lineIdx === currentLine ? 'active' : ''}`}
-                  >
-                    <div className="character">{line.character}</div>
-                    {line.parenthetical && <div className="parenthetical">({line.parenthetical})</div>}
-                    <div className="line-text">
-                      <span className="original">({line.language}) {line.text}</span>
+                {scene.dialogue?.map((line, lineIdx) => {
+                  const isActive = sceneIdx === currentScene && lineIdx === currentLine;
+                  const textWithHighlight = isActive && currentWord ? line.text.split(/(\s+)/).map((word, idx) => {
+                    const isCurrentWord = word.trim() === currentWord?.trim();
+                    return (
+                      <span key={idx} className={isCurrentWord ? 'highlighted-word' : ''}>
+                        {word}
+                      </span>
+                    );
+                  }) : line.text;
+
+                  return (
+                    <div
+                      key={lineIdx}
+                      className={`dialogue-line ${isActive ? 'active' : ''}`}
+                    >
+                      <div className="character">{line.character}</div>
+                      {line.parenthetical && <div className="parenthetical">({line.parenthetical})</div>}
+                      <div className="line-text">
+                        <span className="original">({line.language}) {textWithHighlight}</span>
+                      </div>
+                      {line.action && <div className="action">[{line.action}]</div>}
                     </div>
-                    {line.action && <div className="action">[{line.action}]</div>}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ))}
           </div>
