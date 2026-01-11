@@ -21,11 +21,23 @@ const langToISO = {
 
 export const convertLangToISO = (lang) => langToISO[lang] || 'en-US';
 
+const getVoiceForLanguage = (langCode) => {
+  const voices = synth.getVoices();
+  const voice = voices.find(v => v.lang.startsWith(langCode.split('-')[0]));
+  return voice || voices[0];
+};
+
 export const speak = (text, lang = 'English', rate = 1, onStart) => {
   return new Promise((resolve) => {
+    const langCode = convertLangToISO(lang);
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = convertLangToISO(lang);
-    console.log('current lang:', utterance.lang, lang, text)
+    utterance.lang = langCode;
+
+    const voice = getVoiceForLanguage(langCode);
+    if (voice) {
+      utterance.voice = voice;
+    }
+
     utterance.rate = rate;
     if (onStart) utterance.onstart = onStart;
     utterance.onend = resolve;
