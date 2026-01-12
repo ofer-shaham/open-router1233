@@ -100,21 +100,58 @@ export const speakWithHighlight = (text, lang = 'English', rate = 1, onWordStart
 
     const words = text.split(/\s+/).filter(w => w.length > 0);
     let currentWordIndex = 0;
-    const wordDuration = (text.length / rate) * 10;
-    const avgWordDuration = wordDuration / Math.max(words.length, 1);
+    let startTime = 0;
+    let wordDurations = [];
 
-    const interval = setInterval(() => {
-      if (currentWordIndex < words.length && onWordStart) {
-        onWordStart(words[currentWordIndex]);
-        currentWordIndex++;
+    // Estimate word durations based on word length and speaking rate
+    const baseDuration = 1000 / rate; // milliseconds per character approximately
+    words.forEach(word => {
+      const duration = Math.max(word.length * baseDuration * 0.1, baseDuration * 0.3);
+      wordDurations.push(duration);
+    });
+
+    const totalDuration = wordDurations.reduce((sum, dur) => sum + dur, 0);
+    let cumulativeTime = 0;
+
+    utterance.onstart = () => {
+      startTime = Date.now();
+      if (onStart) onStart();
+      
+      const highlightNextWord = () => {
+        if (currentWordIndex < words.length) {
+          if (onWordStart) onWordStart(words[currentWordIndex]);
+          currentWordIndex++;
+          
+          if (currentWordIndex < words.length) {
+            const nextDelay = wordDurations[currentWordIndex];
+            setTimeout(highlightNextWord, nextDelay);
+          }
+        }
+      };
+      
+      // Start highlighting the first word
+      if (words.length > 0) {
+        setTimeout(() => {
+          if (onWordStart) onWordStart(words[0]);
+          currentWordIndex = 1;
+          
+          // Schedule remaining words
+          for (let i = 1; i < words.length; i++) {
+            cumulativeTime += wordDurations[i - 1];
+            setTimeout(() => {
+              if (onWordStart) onWordStart(words[i]);
+            }, cumulativeTime);
+          }
+        }, wordDurations[0] * 0.5); // Start highlighting midway through first word
       }
-    }, avgWordDuration);
+    };
 
     const originalOnEnd = utterance.onend;
     utterance.onend = () => {
-      clearInterval(interval);
+      // Clear any remaining highlights
       if (onWordStart) onWordStart(null);
       originalOnEnd?.();
+      resolve();
     };
 
     synth.speak(utterance);

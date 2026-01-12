@@ -1,16 +1,103 @@
 .container {
-  max-width: 1000px;
-  margin: 0 auto;
   padding: 24px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   color: #1f2937;
+  transition: background-color 0.3s, color 0.3s;
 }
 
-h1 {
-  text-align: center;
-  font-size: 28px;
+.container.dark {
+  background-color: #1a1a1a;
+  color: #e5e7eb;
+}
+
+.container.dark h1,
+.container.dark h2,
+.container.dark h3 {
+  color: #f3f4f6;
+}
+
+.container.dark .section {
+  background: #2d2d2d;
+  border-color: #404040;
+}
+
+.container.dark .dialogue-line {
+  background: #333;
+  border-color: #555;
+}
+
+.container.dark .scene-description {
+  background: #2d2d2d;
+  color: #9ca3af;
+}
+
+.container.dark .format-display {
+  background: #333;
+}
+
+.container.dark .json-value {
+  color: #10b981;
+}
+
+.container.dark .json-item strong,
+.container.dark .json-property strong {
+  color: #8b5cf6;
+}
+
+.container.dark textarea {
+  background: #333;
+  border-color: #555;
+  color: #e5e7eb;
+}
+
+.container.dark textarea:focus {
+  border-color: #60a5fa;
+}
+
+.container.dark select {
+  background: #333;
+  border-color: #555;
+  color: #e5e7eb;
+}
+
+.container.dark .toggle-btn {
+  background: #555;
+  color: #e5e7eb;
+  border-color: #666;
+}
+
+.container.dark .toggle-btn:hover {
+  background: #666;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 32px;
-  color: #111827;
+}
+
+.dark-mode-toggle {
+  background: none;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.2s;
+}
+
+.container.dark .dark-mode-toggle {
+  border-color: #555;
+  color: #e5e7eb;
+}
+
+.dark-mode-toggle:hover {
+  background: #f3f4f6;
+}
+
+.container.dark .dark-mode-toggle:hover {
+  background: #404040;
 }
 
 h2 {
@@ -398,6 +485,54 @@ select {
   font-size: 16px;
   margin-bottom: 12px;
   color: #111827;
+}
+
+.language-legend {
+  margin-bottom: 24px;
+  padding: 16px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+}
+
+.container.dark .language-legend {
+  background: #2d2d2d;
+  border-color: #404040;
+}
+
+.language-legend h3 {
+  font-size: 16px;
+  margin-bottom: 12px;
+  color: #111827;
+}
+
+.container.dark .language-legend h3 {
+  color: #f3f4f6;
+}
+
+.legend-items {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #374151;
+}
+
+.container.dark .legend-item {
+  color: #d1d5db;
+}
+
+.color-box {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  border: 1px solid #d1d5db;
 }
 
 .scene-description {
