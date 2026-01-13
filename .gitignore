@@ -1,3 +1,40 @@
-node_modules
+# Node
+node_modules/
+
+# Env files
 .env
-dist
+.env.local
+.env.*.local
+
+# Logs
+logs
+*.log
+
+# Build outputs
+dist/
+build/
+.vite/
+.cache/
+
+# Coverage
+coverage/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editors/IDEs
+.idea/
+.vscode/
+
+# Archives
+*.tgz
+*.gz
+
+# Misc
+*.local
+
+# Lockfiles (usually committed) - keep if you want deterministic installs
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
